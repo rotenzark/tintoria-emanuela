@@ -1,0 +1,227 @@
+/* Tintoria Emanuela · viale Fulvio Testi 81 — «Appesa o piegata?»
+   La domanda del banco quando si porta una camicia: sul loro listino ci sono tre righe per la stessa camicia (appesa,
+   piegata, stirata a mano da viaggio). Il sito è il tagliando di ritiro: il biglietto arancione, numerato a macchina,
+   con una riga per sezione. La firma è la gruccia: ogni titolo pende dal gancio e, quando entra, dondola e si ferma
+   (stato finale nel CSS: appeso, fermo; il JS lo stacca e lo appende). Palette: l'arancione del tagliando, il rosso della
+   loro cover, il viola delle mollette del poster. Niente prezzi. */
+
+/* ── reset tecnico (PLUMBING) ── */
+[hidden]{display:none !important}
+img{max-width:100%;height:auto}
+*,*::before,*::after{box-sizing:border-box}
+
+:root{
+  --crema:#FBF8F1; --carta:#FFFDF8; --linea:#E2DBCB; --inchiostro:#1B1A17; --grigio:#6E6A62;
+  --arancio:#F2A33A; --arancio-chiaro:#FBE3BD; --arancio-scuro:#B9720F;
+  --rosso:#B3202A; --rosso-scuro:#8C1820; --viola:#5B3FA0;
+  --f-tit:'Merriweather',Georgia,'Times New Roman',serif;
+  --f-txt:'PT Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mac:'Special Elite','Courier New',Courier,monospace;
+  --lato:clamp(1rem,5vw,4rem);
+  --testata:68px;
+}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--testata) + 12px)}
+body{margin:0;font-family:var(--f-txt);font-size:1.06rem;line-height:1.62;color:var(--inchiostro);background:var(--crema);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{display:block}
+a{color:inherit}
+h1,h2,h3,h4{font-family:var(--f-tit);font-weight:900;line-height:1.1;margin:0;letter-spacing:-.01em}
+h2{font-size:clamp(1.8rem,3.8vw,2.9rem)}
+h3{font-size:clamp(1.15rem,1.8vw,1.4rem)}
+p{margin:0 0 1em}
+b,strong{font-weight:700}
+:focus-visible{outline:3px solid var(--viola);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.mac{font-family:var(--f-mac);letter-spacing:.04em}
+
+/* reveal: stato iniziale solo dietro .js (anti-flash) */
+.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease}
+.js .reveal.in-view{opacity:1;transform:none}
+html:not(.js) .reveal{opacity:1;transform:none}
+
+/* ── la firma: la gruccia ── */
+.appeso{display:inline-block;transform-origin:50% 0;will-change:transform;max-width:100%}
+.appeso--sx{display:block}
+.gruccia{display:block;width:96px;height:36px;margin:0 auto .2rem;overflow:visible}
+.appeso--sx .gruccia{margin-left:0}
+.gruccia path{fill:none;stroke:var(--inchiostro);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.gruccia .gancio{stroke:var(--arancio-scuro)}
+.appeso__t{display:block}
+
+/* ── intro: la gruccia che scende ── */
+.no-js .intro{display:none}
+.intro{position:fixed;inset:0;z-index:300;display:grid;place-content:center;justify-items:center;padding:1rem;background:var(--crema);text-align:center;transition:opacity .6s,visibility .6s}
+.intro.hide{opacity:0;visibility:hidden}
+.intro__stanga{width:min(80vw,520px);height:6px;background:var(--inchiostro);border-radius:3px;margin-bottom:.4rem}
+.intro__t{margin:0;font-family:var(--f-tit);font-weight:900;font-size:clamp(2rem,7vw,4.6rem);line-height:1.05}
+.intro__t .gruccia{width:120px;height:44px}
+.intro__f{margin:1rem 0 0;font-family:var(--f-mac);font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;color:var(--arancio-scuro);opacity:0;transition:opacity .4s}
+.intro__f.is-on{opacity:1}
+.intro__skip{margin-top:1.4rem;background:none;border:0;color:var(--grigio);font:inherit;font-weight:700;font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+
+/* ── testata (fondo pieno, NIENTE backdrop-filter) ── */
+.testata{position:sticky;top:0;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--testata);padding:0 clamp(1rem,4vw,3rem);background:var(--carta);color:var(--inchiostro);border-bottom:3px solid var(--arancio);max-width:100%;overflow:hidden}
+.marchio{display:flex;flex-direction:column;justify-content:center;text-decoration:none;line-height:1.1;white-space:nowrap;min-width:0}
+.marchio__n{font-family:var(--f-tit);font-weight:900;font-size:1.2rem}
+.marchio__n small{font-family:var(--f-mac);font-weight:400;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--arancio-scuro);margin-left:.4rem}
+.marchio__s{font-size:.74rem;color:var(--grigio);letter-spacing:.02em}
+.nav{display:flex;gap:clamp(.6rem,1.4vw,1.1rem)}
+.nav a{text-decoration:none;font-size:.9rem;font-weight:700;padding:.3rem 0;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a:hover{border-color:var(--arancio)}
+.testata__coda{display:flex;align-items:center;gap:.6rem}
+.lingue{display:flex;border:1px solid var(--inchiostro);border-radius:4px;overflow:hidden}
+.lingue button{background:none;border:0;padding:.35rem .5rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;color:var(--inchiostro)}
+.lingue button.is-on{background:var(--inchiostro);color:var(--carta)}
+.burger{display:none;width:42px;height:42px;background:none;border:0;cursor:pointer;flex-direction:column;justify-content:center;gap:5px;padding:8px}
+.burger span{display:block;height:2px;background:var(--inchiostro)}
+.drawer{position:fixed;top:var(--testata);left:0;right:0;z-index:85;background:var(--carta);border-bottom:3px solid var(--arancio);padding:.6rem var(--lato) 1rem;display:grid;gap:.1rem;box-shadow:0 14px 30px rgba(0,0,0,.14)}
+.drawer a{padding:.65rem 0;text-decoration:none;font-weight:700;border-bottom:1px solid var(--linea)}
+.drawer__cta{color:var(--rosso);border-bottom:0 !important}
+
+/* ── bottoni ── */
+.bottone{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.72rem 1.15rem;border-radius:6px;font-weight:700;text-decoration:none;font-size:.95rem;line-height:1.1;border:2px solid transparent;transition:transform .15s,background .15s}
+.bottone--rosso{background:var(--rosso);color:#fff;border-color:var(--rosso)}
+.bottone--rosso:hover{background:var(--rosso-scuro)}
+.bottone--nero{background:var(--inchiostro);color:var(--carta);border-color:var(--inchiostro)}
+.bottone--bordo{background:transparent;color:var(--inchiostro);border-color:var(--inchiostro)}
+.bottone:hover{transform:translateY(-1px)}
+.testata .bottone{padding:.5rem .9rem;font-size:.88rem}
+
+/* ── il tagliando ── */
+.tagliando{max-width:1180px;margin:clamp(1.2rem,3vw,2.4rem) auto 3rem;background:var(--carta);border:1px solid var(--linea);border-radius:10px;box-shadow:0 18px 44px rgba(27,26,23,.08);position:relative;overflow:hidden}
+.tagliando__testa{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1.2rem;background:var(--arancio);color:var(--inchiostro);padding:.75rem var(--lato);border-radius:10px 10px 0 0;font-family:var(--f-mac);font-size:.82rem;letter-spacing:.1em;text-transform:uppercase}
+.tagliando__testa span{white-space:nowrap}
+.riga{position:relative;padding:clamp(2rem,5vw,4rem) var(--lato);border-top:2px dashed var(--linea)}
+.riga:first-of-type{border-top:0}
+.riga::before,.riga::after{content:'';position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--crema);border:1px solid var(--linea)}
+.riga::before{left:-11px}
+.riga::after{right:-11px}
+.riga:first-of-type::before,.riga:first-of-type::after{display:none}
+.riga__n{position:absolute;top:1rem;right:var(--lato);font-family:var(--f-mac);font-size:.86rem;letter-spacing:.12em;color:var(--arancio-scuro)}
+.riga__k{font-family:var(--f-mac);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--arancio-scuro);margin:0 0 .7rem}
+.riga__h{margin:0 0 1rem}
+.riga__p{max-width:42rem}
+.riga--tinta{background:var(--crema)}
+.didascalia{font-family:var(--f-mac);font-size:.74rem;color:var(--grigio);padding:.5rem 0 0;margin:0;letter-spacing:.03em}
+.foto{margin:0}
+.foto img{width:100%;border-radius:8px}
+.shot{display:block;position:relative;width:100%;padding:0;border:0;background:none;cursor:zoom-in;text-align:left;font:inherit;color:inherit}
+.due{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.4rem,3vw,3rem);align-items:start}
+
+/* ── apertura ── */
+.apertura{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.4rem,3vw,3rem);align-items:center}
+.apertura__k{font-family:var(--f-mac);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--arancio-scuro);margin:0 0 1rem}
+.apertura__h{font-size:clamp(2.5rem,6.2vw,5rem);line-height:1.02;margin:0 0 1rem}
+.apertura__h .gruccia{width:110px;height:40px;margin-left:0}
+.apertura__p{font-size:clamp(1.05rem,1.35vw,1.2rem);max-width:34rem}
+.apertura__stato{font-family:var(--f-mac);font-size:.88rem;color:var(--rosso);margin:.2rem 0 1rem}
+.apertura__azioni{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}
+.apertura__badge{font-size:.86rem;color:var(--grigio);max-width:32rem;margin:0}
+.apertura__foto img{border-radius:8px;box-shadow:0 18px 40px rgba(27,26,23,.14)}
+
+/* ── i capi ── */
+.capi{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:1.2rem;margin:1.4rem 0 0}
+.gruppo{background:var(--carta);border:1px solid var(--linea);border-radius:8px;padding:1.1rem 1.2rem 1rem}
+.gruppo h3{margin:0 0 .6rem;font-size:1.05rem;text-transform:uppercase;letter-spacing:.06em;font-family:var(--f-mac);font-weight:400;color:var(--arancio-scuro)}
+.gruppo ul{list-style:none;margin:0;padding:0}
+.gruppo li{padding:.38rem 0;border-bottom:1px dotted var(--linea);display:flex;justify-content:space-between;gap:.6rem;font-size:.98rem}
+.gruppo li:last-child{border-bottom:0}
+.gruppo li .come{font-family:var(--f-mac);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--viola);white-space:nowrap}
+.gruppo li b{font-weight:700}
+.capi__nota{margin:1.2rem 0 0;font-size:.95rem;color:var(--grigio);max-width:44rem}
+
+/* ── come torna ── */
+.conteggio{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.9rem;margin:1.4rem 0 1rem;padding:0;list-style:none}
+.conteggio li{border-top:3px solid var(--arancio);padding-top:.5rem}
+.conteggio b{display:block;font-family:var(--f-tit);font-weight:900;font-size:2.3rem;line-height:1}
+.conteggio span{font-size:.84rem;color:var(--grigio);display:block;line-height:1.35;margin-top:.2rem}
+.conteggio__nota{font-family:var(--f-mac);font-size:.74rem;color:var(--grigio);margin:0 0 1.2rem;letter-spacing:.03em}
+.citazione{font-family:var(--f-tit);font-weight:900;font-size:clamp(1.4rem,2.8vw,2.1rem);line-height:1.15;margin:.4rem 0 1rem;color:var(--rosso)}
+.citazione small{display:block;font-family:var(--f-mac);font-weight:400;font-size:.76rem;color:var(--grigio);margin-top:.4rem;letter-spacing:.04em}
+.passi{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:1.2rem 0 0;padding:0;list-style:none}
+.passo{background:var(--arancio-chiaro);border-radius:8px;padding:1rem 1rem .9rem}
+.passo b{display:block;font-family:var(--f-mac);font-weight:400;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--arancio-scuro);margin-bottom:.3rem}
+.passo p{margin:0;font-size:.95rem}
+
+/* ── le camicie ── */
+.modi{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin:1.4rem 0 0;padding:0;list-style:none}
+.modo{background:var(--carta);border:1px solid var(--linea);border-top:6px solid var(--viola);border-radius:8px;padding:1.1rem 1.1rem 1rem}
+.modo--a{border-top-color:var(--arancio)} .modo--b{border-top-color:var(--viola)} .modo--c{border-top-color:var(--rosso)}
+.modo h3{margin:0 0 .4rem}
+.modo p{margin:0;font-size:.97rem}
+.modo .mac{display:block;font-size:.74rem;color:var(--grigio);margin-bottom:.3rem;text-transform:uppercase}
+.camicie__nota{margin:1.4rem 0 0;max-width:44rem}
+
+/* ── recensioni ── */
+.recensioni{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;list-style:none;margin:1.4rem 0 0;padding:0}
+.rec{background:var(--carta);border:1px solid var(--linea);border-radius:8px;padding:1.1rem 1.1rem 1rem;display:flex;flex-direction:column}
+.rec p{margin:0 0 .7rem;font-size:.97rem;flex:1}
+.rec__chi{font-family:var(--f-mac);font-size:.72rem;color:var(--grigio);letter-spacing:.03em}
+.stelle{color:var(--arancio-scuro);letter-spacing:.05em;font-size:.9rem;margin-bottom:.4rem}
+.voto{display:inline-flex;align-items:baseline;gap:.5rem;font-family:var(--f-mac);font-size:.84rem;color:var(--grigio);margin:.4rem 0 0}
+.voto b{font-family:var(--f-tit);font-weight:900;font-size:1.7rem;color:var(--inchiostro)}
+
+/* ── orari e dove ── */
+.dove{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:1.2rem}
+.orari table{width:100%;border-collapse:collapse;font-size:.98rem}
+.orari td{padding:.5rem .3rem;border-bottom:1px dotted var(--linea);vertical-align:top}
+.orari td:first-child{font-weight:700;width:32%}
+.orari tr.is-today td{background:var(--arancio-chiaro)}
+.orari__nota{font-size:.9rem;color:var(--grigio);margin:.8rem 0 0}
+.contatti{list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.5rem;font-size:1rem}
+.contatti a{color:var(--rosso);font-weight:700}
+.contatti__k{display:block;font-family:var(--f-mac);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grigio)}
+.mappa{margin:1.4rem 0 0;grid-column:1/-1}
+.mappa iframe{width:100%;height:340px;border:0;display:block;border-radius:8px}
+
+/* ── domande ── */
+.domande{display:grid;gap:.6rem;margin-top:1.2rem}
+.domande details{background:var(--carta);border:1px solid var(--linea);border-radius:8px;padding:.75rem 1rem}
+.domande summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:1rem}
+.domande summary::-webkit-details-marker{display:none}
+.domande summary::after{content:'+';font-family:var(--f-mac);color:var(--arancio-scuro);flex:none}
+.domande details[open] summary::after{content:'–'}
+.domande p{margin:.55rem 0 0;font-size:.98rem}
+
+/* ── piede ── */
+.piede{max-width:1180px;margin:0 auto;padding:.5rem var(--lato) 5rem;color:var(--grigio);font-size:.85rem;display:grid;gap:.5rem}
+.piede__m{font-family:var(--f-tit);font-weight:900;color:var(--inchiostro);font-size:1.15rem;margin:0}
+.piede__d,.piede__s,.piede__soc{margin:0}
+.piede__b{margin:.4rem 0 0;max-width:60rem}
+.piede a{color:inherit}
+
+/* ── barra azioni (mobile) ── */
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:80;display:none;grid-template-columns:repeat(4,1fr);background:var(--inchiostro);color:var(--carta)}
+.barra a{padding:.85rem .3rem;text-align:center;font-size:.8rem;font-weight:700;text-decoration:none;border-right:1px solid rgba(255,255,255,.14)}
+.barra a:last-child{border-right:0}
+
+/* ── lightbox ── */
+.lightbox{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:2rem}
+.lightbox img{max-width:100%;max-height:90vh;width:auto;height:auto;object-fit:contain}
+.lightbox__chiudi{position:absolute;top:1rem;right:1rem;background:none;border:0;color:#fff;font-size:2.4rem;cursor:pointer;line-height:1}
+
+/* ── responsive ── */
+@media (max-width:960px){
+  .nav{display:none}
+  .burger{display:flex}
+  .apertura,.due{grid-template-columns:1fr}
+  .passi{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .testata{gap:.5rem;padding:0 1rem}
+  .testata .bottone{display:none}
+  .marchio__s{display:none}
+  .marchio__n{font-size:1.05rem}
+  .marchio__n small{display:none}
+  .lingue button{padding:.3rem .4rem}
+  .tagliando{margin:.8rem .5rem 2rem;border-radius:8px}
+  .riga::before,.riga::after{display:none}
+  .apertura__h{font-size:clamp(2.2rem,11vw,3.4rem)}
+  .dove{grid-template-columns:1fr}
+  .barra{display:grid}
+  .piede{padding-bottom:6.5rem}
+  .mappa iframe{height:280px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .bottone{transition:none}
+}
